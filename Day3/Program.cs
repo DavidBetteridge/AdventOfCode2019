@@ -9,31 +9,36 @@ namespace Day3
     {
         static void Main()
         {
-            var lines = File.ReadAllLines("Part1.txt");
+            var lines = File.ReadAllLines("Sample.txt");
             var route1 = BuildLines(lines[0].Split(','));
             var route2 = BuildLines(lines[1].Split(','));
 
             var intersections = new List<(int x, int y)>();
+            var distances = new List<int>();
             foreach (var line in route1)
             {
                 foreach (var line2 in route2)
                 {
-                    if (line.DoLinesCross(line2, out var intersection))
+                    if (line.DoLinesCross(line2, out var intersection, out var distanceTravelled))
                     {
                         intersections.Add(intersection);
+                        distances.Add(distanceTravelled);
                     }
                 }
             }
 
-            var distances = intersections
+            var part1 = intersections
                                 .Select(pt => Math.Abs(pt.x) + Math.Abs(pt.y))
-                                .OrderBy(d => d);
+                                .OrderBy(d => d)
+                                .First();
+
+            var part2 = distances.Min();
         }
 
         private static List<Line> BuildLines(string[] moves)
         {
             var lines = new List<Line>();
-
+            var totalDistance = 0;
             (int x, int y) point = (0, 0);
             foreach (var move in moves)
             {
@@ -48,9 +53,10 @@ namespace Day3
                     _ => (point.x, point.y - distance),
                 };
 
-                lines.Add(new Line(point, newPoint));
+                lines.Add(new Line(totalDistance, point, newPoint));
 
                 point = newPoint;
+                totalDistance += distance;
             }
 
             return lines;
