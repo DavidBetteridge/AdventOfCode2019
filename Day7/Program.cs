@@ -14,7 +14,7 @@ namespace Day7
                      .Select(op => int.Parse(op))
                      .ToArray();
 
-            var permutations = GetPermutations(Enumerable.Range(0, 5), 5);
+            var permutations = GetPermutations(Enumerable.Range(5, 5), 5);
 
             var bestOutput = int.MinValue;
             var bestPermutation = new int[0];
@@ -23,24 +23,30 @@ namespace Day7
             {
                 var phaseSetting = permutation.ToArray();
 
-                var ampA = new AMP();
-                var ampAOutput = ampA.Execute(memory, phaseSetting[0], 0);
+                var input = 0;
 
-                var ampB = new AMP();
-                var ampBOutput = ampB.Execute(memory, phaseSetting[1], ampAOutput);
+                var ampA = new AMP(memory, phaseSetting[0]);
+                var ampB = new AMP(memory, phaseSetting[1]);
+                var ampC = new AMP(memory, phaseSetting[2]);
+                var ampD = new AMP(memory, phaseSetting[3]);
+                var ampE = new AMP(memory, phaseSetting[4]);
 
-                var ampC = new AMP();
-                var ampCOutput = ampC.Execute(memory, phaseSetting[2], ampBOutput);
-
-                var ampD = new AMP();
-                var ampDOutput = ampD.Execute(memory, phaseSetting[3], ampCOutput);
-
-                var ampE = new AMP();
-                var ampEOutput = ampE.Execute(memory, phaseSetting[4], ampDOutput);
-
-                if (ampEOutput > bestOutput)
+                while (!ampA.Complete)
                 {
-                    bestOutput = ampEOutput;
+                    input = ampA.Execute(input);
+
+                    input = ampB.Execute(input);
+
+                    input = ampC.Execute(input);
+
+                    input = ampD.Execute(input);
+
+                    input = ampE.Execute(input);
+                }
+
+                if (input > bestOutput)
+                {
+                    bestOutput = input;
                     bestPermutation = phaseSetting;
                 }
             }

@@ -1,4 +1,4 @@
-﻿namespace Day5
+﻿namespace Day7
 {
     public class Instruction
     {

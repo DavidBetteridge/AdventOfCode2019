@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Day5
+namespace Day7
 {
     partial class Computer
     {
@@ -8,6 +8,7 @@ namespace Day5
         private readonly Func<int> _inputFunction;
         private readonly Action<int> _outputFunction;
         private bool _halt;
+        private int _instructionPointer;
 
         public void Halt() => _halt = true;
 
@@ -16,29 +17,31 @@ namespace Day5
             _memory = memory;
             _inputFunction = inputFunction;
             _outputFunction = outputFunction;
+            _instructionPointer = 0;
         }
 
-        public void RunProgram()
+        public bool RunProgram()
         {
-            var instructionPointer = 0;
-            while (!_halt && _memory[instructionPointer] != 99)
+            _halt = false;
+            while (!_halt && _memory[_instructionPointer] != 99)
             {
-                var instruction = new Instruction(_memory[instructionPointer]);
+                var instruction = new Instruction(_memory[_instructionPointer]);
 
-                instructionPointer = instruction.opCode switch
+                _instructionPointer = instruction.opCode switch
                 {
-                    1 => ADD(instructionPointer, instruction),
-                    2 => MUL(instructionPointer, instruction),
-                    3 => INPUT(instructionPointer, instruction),
-                    4 => OUTPUT(instructionPointer, instruction),
-                    5 => JMP_IF_TRUE(instructionPointer, instruction),
-                    6 => JMP_IF_FALSE(instructionPointer, instruction),
-                    7 => JMP_IF_LESS_THAN(instructionPointer, instruction),
-                    8 => JMP_IF_EQUALS(instructionPointer, instruction),
+                    1 => ADD(_instructionPointer, instruction),
+                    2 => MUL(_instructionPointer, instruction),
+                    3 => INPUT(_instructionPointer, instruction),
+                    4 => OUTPUT(_instructionPointer, instruction),
+                    5 => JMP_IF_TRUE(_instructionPointer, instruction),
+                    6 => JMP_IF_FALSE(_instructionPointer, instruction),
+                    7 => JMP_IF_LESS_THAN(_instructionPointer, instruction),
+                    8 => JMP_IF_EQUALS(_instructionPointer, instruction),
                     _ => throw new System.Exception($"Unexpected opcode {instruction.opCode}")
                 };
-
             }
+
+            return _memory[_instructionPointer] == 99;
         }
         private int JMP_IF_EQUALS(int instructionPointer, Instruction instruction)
         {

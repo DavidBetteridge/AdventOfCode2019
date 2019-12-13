@@ -1,43 +1,45 @@
-﻿using Day5;
-using System;
-
-namespace Day7
+﻿namespace Day7
 {
     public class AMP
     {
         private int _result;
         private int _phase;
-        private int _input;
+        private int _nextInput;
         private Computer _computer;
-        private bool secondInput = false;
-
-        public int Execute(int[] memory, int phase, int input)
+        private bool _phaseSet = false;
+        public bool Complete { get; private set; }
+        public AMP(int[] memory, int phase)
         {
             _phase = phase;
-            _input = input;
 
             _computer = new Computer((int[])memory.Clone(), Input, Output);
-            _computer.RunProgram();
+        }
+
+        public int Execute(int input)
+        {
+            _nextInput = input;
+
+            Complete = _computer.RunProgram();
 
             return _result;
         }
 
         private int Input()
         {
-            if (secondInput)
+            if (_phaseSet)
             {
-                return _input;
+                return _nextInput;
             }
             else
             {
-                secondInput = true;
+                _phaseSet = true;
                 return _phase;
             }
         }
 
         private void Output(int value)
         {
-           // Console.Write(value);
+            // Console.Write(value);
             _result = value;
             _computer.Halt();
         }
