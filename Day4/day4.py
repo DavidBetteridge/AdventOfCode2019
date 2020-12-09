@@ -24,3 +24,6 @@ def part_one():
 def part_two():
     return sum([is_valid_for_part_two(x) for x in possible_passwords()])
 
+def part_two_two():
+    return sum([any(password[i] == password[i + 1] and password.count(password[i]) == 2 for i in range(0, 5)) for password in possible_passwords()])    
+
