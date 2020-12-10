@@ -13,11 +13,6 @@ def part_two():
         row = ""
         for c in range(0, 25):
             offset = c + (r * 25)
-
-            for layer in layers:
-                if layer[offset] != '2':
-                    row += layer[offset]
-                    break
-            
+            row += next(iter([layer[offset] for layer in layers if layer[offset] != '2']))
         result = result + row.replace('0', ' ') + '\r\n'
     return result        
