@@ -22,7 +22,7 @@ namespace Day2
 
         private static int RunProgram(int noun, int verb)
         {
-            var memory = File.ReadAllText("Part2.txt")
+            var memory = File.ReadAllText("Day2.txt")
                              .Split(',')
                              .Select(op => int.Parse(op))
                              .ToArray();

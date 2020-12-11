@@ -16,6 +16,3 @@ def part_one():
 
 def part_two():
     return sum([calculate_fuel_plus_fuel(mass) for mass in masses])       
-
-print(part_one())    #3161483
-print(part_two())   #4739374
