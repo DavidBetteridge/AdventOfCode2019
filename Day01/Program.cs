@@ -17,14 +17,12 @@ namespace Day1
                     return fuel + FuelRequired(fuel);
             }
 
-            var totalFuel = File.ReadAllLines("Part1.txt")
+            var totalFuel = File.ReadAllLines("Day1.txt")
                                 .Select(line => int.Parse(line))
                                 .Select(line => FuelRequired(line))
                                 .Sum();
 
             Console.WriteLine(totalFuel);  //4739374
         }
-
-
     }
 }
