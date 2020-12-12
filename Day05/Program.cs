@@ -9,7 +9,7 @@ namespace Day5
         {
             while (true)
             {
-                var memory = File.ReadAllText("Part1.txt")
+                var memory = File.ReadAllText("day5.txt")
                          .Split(',')
                          .Select(op => int.Parse(op))
                          .ToArray();
