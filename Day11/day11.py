@@ -61,7 +61,7 @@ def handle_commands(command):
 
     if colourCommand == True:
         paintedPanels[(x,y)] = command
-        print(f'Painting {x},{y} with {command}')
+        #print(f'Painting {x},{y} with {command}')
     else:
         if command == 1:
             turn_right()
@@ -78,7 +78,25 @@ memory = {}
 for i in range(len(s)):
     memory[i] = int(s[i])
    
+
+paintedPanels[(x,y)] = 1  # Start on white
 com = Computer(memory)
 com.run_program(enter_panel_colour, handle_commands)
 
-print(len(paintedPanels))
+minX = min(paintedPanels, key=lambda x:x[0])[0]
+maxX = max(paintedPanels, key=lambda x:x[0])[0]
+minY = min(paintedPanels, key=lambda x:x[1])[1]
+maxY = max(paintedPanels, key=lambda x:x[1])[1]
+
+for x in range(minX, maxX + 1):
+    row = ""
+    for y in range(minY, maxY + 1):
+        if (x,y) in paintedPanels and paintedPanels[(x,y)] == 1:
+            row += "*"
+        else:
+            row += " "
+    print(row)
+
+#part 1 2418
+
+
