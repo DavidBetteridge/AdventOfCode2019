@@ -42,6 +42,7 @@ class Computer:
     def __init__(self, memory):
         self.memory = memory
         self.relativeBase = 0
+        self.instructionPointer = 0
 
     def read_value_for_parameter_one(self, command, instructionPointer):
         pointer = self.address(instructionPointer + 1, command.parameter1Mode)
@@ -83,79 +84,87 @@ class Computer:
         else:
             raise Exception(f"parameterMode must be POSITION, IMMEDIATE or RELATIVE.  Not {parameterMode}.")
 
-    def run_program(self, inputFunction, outputFunction):
-        instructionPointer = 0
+    def input_and_continue(self, inputValue):
+        self.memory[self.inputAddress] = inputValue
+        self.run_program(self.outputFunction)
+
+    def run_program(self, outputFunction, inputFunction = None):
+        self.outputFunction = outputFunction
         while True:
-            command = instruction(self.memory[instructionPointer])
+            command = instruction(self.memory[self.instructionPointer])
 
             if command.opCode == OpCode.ADD:
-                parameter1 = self.read_value_for_parameter_one(command, instructionPointer)
-                parameter2 = self.read_value_for_parameter_two(command, instructionPointer)
-                parameter3 = self.read_address_for_parameter_three(command, instructionPointer)
+                parameter1 = self.read_value_for_parameter_one(command, self.instructionPointer)
+                parameter2 = self.read_value_for_parameter_two(command, self.instructionPointer)
+                parameter3 = self.read_address_for_parameter_three(command, self.instructionPointer)
                 self.memory[parameter3] = parameter1 + parameter2
-                instructionPointer += 4 
+                self.instructionPointer += 4 
 
             elif command.opCode == OpCode.MULTIPLY:
-                parameter1 = self.read_value_for_parameter_one(command, instructionPointer)
-                parameter2 = self.read_value_for_parameter_two(command, instructionPointer)
-                parameter3 = self.read_address_for_parameter_three(command, instructionPointer)
+                parameter1 = self.read_value_for_parameter_one(command, self.instructionPointer)
+                parameter2 = self.read_value_for_parameter_two(command, self.instructionPointer)
+                parameter3 = self.read_address_for_parameter_three(command, self.instructionPointer)
                 self.memory[parameter3] = parameter1 * parameter2
-                instructionPointer += 4
+                self.instructionPointer += 4
 
             elif command.opCode == OpCode.INPUT:
-                parameter1 = self.read_address_for_parameter_one(command, instructionPointer)
-                self.memory[parameter1] = inputFunction()
-                instructionPointer += 2
+                parameter1 = self.read_address_for_parameter_one(command, self.instructionPointer)
+                self.instructionPointer += 2
+                if inputFunction != None:
+                    self.memory[parameter1] = inputFunction()
+                else:
+                    self.inputAddress = parameter1
+                    break
 
             elif command.opCode == OpCode.OUTPUT:
-                parameter1 = self.read_value_for_parameter_one(command, instructionPointer)
+                parameter1 = self.read_value_for_parameter_one(command, self.instructionPointer)
                 outputFunction(parameter1)
-                instructionPointer += 2
+                self.instructionPointer += 2
 
             elif command.opCode == OpCode.JUMP_IF_TRUE:
-                parameter1 = self.read_value_for_parameter_one(command, instructionPointer)
-                parameter2 = self.read_value_for_parameter_two(command, instructionPointer)
+                parameter1 = self.read_value_for_parameter_one(command, self.instructionPointer)
+                parameter2 = self.read_value_for_parameter_two(command, self.instructionPointer)
 
                 if parameter1 != 0:
-                    instructionPointer = parameter2
+                    self.instructionPointer = parameter2
                 else:
-                    instructionPointer += 3
+                    self.instructionPointer += 3
 
             elif command.opCode == OpCode.JUMP_IF_FALSE:
-                parameter1 = self.read_value_for_parameter_one(command, instructionPointer)
-                parameter2 = self.read_value_for_parameter_two(command, instructionPointer)
+                parameter1 = self.read_value_for_parameter_one(command, self.instructionPointer)
+                parameter2 = self.read_value_for_parameter_two(command, self.instructionPointer)
                 if parameter1 == 0:
-                    instructionPointer = parameter2
+                    self.instructionPointer = parameter2
                 else:
-                    instructionPointer += 3
+                    self.instructionPointer += 3
 
             elif command.opCode == OpCode.LESS_THAN:
-                parameter1 = self.read_value_for_parameter_one(command, instructionPointer)
-                parameter2 = self.read_value_for_parameter_two(command, instructionPointer)
-                parameter3 = self.read_address_for_parameter_three(command, instructionPointer)
+                parameter1 = self.read_value_for_parameter_one(command, self.instructionPointer)
+                parameter2 = self.read_value_for_parameter_two(command, self.instructionPointer)
+                parameter3 = self.read_address_for_parameter_three(command, self.instructionPointer)
                 if parameter1 < parameter2:
                     self.memory[parameter3] = 1
                 else:
                     self.memory[parameter3] = 0
-                instructionPointer += 4
+                self.instructionPointer += 4
 
             elif command.opCode == OpCode.EQUALS:
-                parameter1 = self.read_value_for_parameter_one(command, instructionPointer)
-                parameter2 = self.read_value_for_parameter_two(command, instructionPointer)
-                parameter3 = self.read_address_for_parameter_three(command, instructionPointer)
+                parameter1 = self.read_value_for_parameter_one(command, self.instructionPointer)
+                parameter2 = self.read_value_for_parameter_two(command, self.instructionPointer)
+                parameter3 = self.read_address_for_parameter_three(command, self.instructionPointer)
                 if parameter1 == parameter2:
                     self.memory[parameter3] = 1
                 else:
                     self.memory[parameter3] = 0
-                instructionPointer += 4
+                self.instructionPointer += 4
 
             elif command.opCode == OpCode.ADJUST_RELATIVE_BASE:
-                parameter1 = self.read_value_for_parameter_one(command, instructionPointer)
+                parameter1 = self.read_value_for_parameter_one(command, self.instructionPointer)
                 self.relativeBase += parameter1
-                instructionPointer += 2
+                self.instructionPointer += 2
 
             elif command.opCode == OpCode.HALT:
                 break
 
             else:
-                print(f"Error {self.memory[instructionPointer]}")
+                print(f"Error {self.memory[self.instructionPointer]}")
