@@ -9,7 +9,7 @@ namespace Day7
     {
         static void Main()
         {
-            var memory = File.ReadAllText("Part1.txt")
+            var memory = File.ReadAllText("day7.txt")
                      .Split(',')
                      .Select(op => int.Parse(op))
                      .ToArray();
