@@ -81,9 +81,30 @@ def make(ingredientName, quantity_needed, state):
     if made_extra > 0:
         state.add_to_store(ingredientName, made_extra)
 
-fuel = reactions['FUEL']
-state = State()
-for ingredient in fuel[0]:
-    make(ingredient.Name, ingredient.Quantity, state)
+def ore_needed_to_make_fuel(quantity):
+    fuel = reactions['FUEL']
+    state = State()
+    for ingredient in fuel[0]:
+        make(ingredient.Name, quantity * ingredient.Quantity, state)
+    return state.Ore
 
-print(state.Ore)    
+def part_one():
+    return ore_needed_to_make_fuel(1)
+
+def part_two():
+    target = 1000000000000      #1e9
+    lowerBound = 1
+    upperBound = 1000000000000
+
+    while lowerBound < upperBound:
+        quantity_to_try = math.floor((upperBound + lowerBound) / 2)
+        ore = ore_needed_to_make_fuel(quantity_to_try)
+        if ore == target:
+            return quantity_to_try
+        elif ore < target:
+            lowerBound = quantity_to_try + 1
+        else:
+            upperBound = quantity_to_try - 1
+    return lowerBound - 1
+
+print(part_two())
