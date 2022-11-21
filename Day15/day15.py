@@ -6,6 +6,7 @@
 # 2: The repair droid has moved one step in the requested direction;
 #       its new position is the location of the oxygen system.
 
+import networkx as nx
 from Computer import Computer
 
 
@@ -16,9 +17,11 @@ memory = {}
 for i in range(len(s)):
     memory[i] = int(s[i])
 
-
+G = nx.Graph()
 path = []
 current_location = (0,0)
+oxygen = (0,0)
+droid = (0,0)
 next_move = (0,0)
 known = {}
 known[current_location] = "D"
@@ -74,10 +77,14 @@ def read_from_keyboard():
     elif next_move[0] > current_location[0]:
       return 4
   
+  # Graph should now be built
+  print(oxygen, droid)
+  print(len(nx.shortest_path(G, droid, oxygen))-1)
   return -1
 
 def output_to_screen(valueToPrint):
   global current_location
+  global oxygen
 
   if valueToPrint == 0:
     # Hit a wall.
@@ -85,6 +92,7 @@ def output_to_screen(valueToPrint):
 
   elif valueToPrint == 1:
     if not backtrack: 
+      G.add_edge(current_location, next_move)
       path.append(current_location)
     current_location = next_move
     if next_move not in known:
@@ -93,7 +101,9 @@ def output_to_screen(valueToPrint):
   elif valueToPrint == 2:
     if not backtrack: 
       path.append(current_location)
+      G.add_edge(current_location, next_move)
     current_location = next_move
+    oxygen = current_location
     known[next_move]="O"
 
 com = Computer(memory)
