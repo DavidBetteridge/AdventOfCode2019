@@ -1,3 +1,4 @@
+from collections import defaultdict
 from dataclasses import dataclass
 from typing import Set
 import networkx as nx
@@ -17,7 +18,6 @@ def solve(filename: str) -> int:
   current_location = None
 
   G = nx.Graph()
-  nodes_to_be_merged = set()
   for row_number, row in enumerate(rows):
     for column_number, cell in enumerate(row):
       if cell != "#":
@@ -29,7 +29,6 @@ def solve(filename: str) -> int:
         if cell.islower():
           keys[cell] = Location(column_number, row_number)
 
-        links = 0
         for off_x, off_y in dirs:
           x = column_number + off_x
           y = row_number + off_y
@@ -37,92 +36,68 @@ def solve(filename: str) -> int:
             other_cell = rows[y][x]
             if other_cell != "#":
               G.add_edge(Location(column_number, row_number),Location(x,y), weight=1)
-              links+=1
-        if cell == "." and links == 2:
-          nodes_to_be_merged.add(Location(column_number, row_number))
 
-  # Any node with type=cell,  which has exactly 2 edges can be removed.  The two nodes either side
-  # are then linked with the sum of the weights from the 2 removed edges.
-  while len(nodes_to_be_merged) > 0:
-    node_to_remove = nodes_to_be_merged.pop()
-    edges = list(nx.edges(G, node_to_remove))
-    if len(edges) == 2:
-      lhs = edges[0][1]
-      rhs = edges[1][1]
-      lhs_weight = G[node_to_remove][lhs]["weight"]
-      rhs_weight = G[node_to_remove][rhs]["weight"]
-      G.add_edge(lhs,rhs,weight=lhs_weight+rhs_weight)
-      G.remove_node(node_to_remove)
+  # The graph has no cycles (other than in the center) this means that from
+  # any key there can only be one path to each of the other keys 
+  # cycle = nx.find_cycle(G, orientation="original")
 
-  # Remove DOORS
-  door_edges = {}
-  for door, door_loc in doors.items():
-    door_edges[door] = []
-    for edge in list(nx.edges(G, door_loc)):
-      other = edge[1]
-      weight = G[door_loc][other]["weight"]
-      type = rows[other.y][other.x]
-      door_edges[door].append((other, type, weight))
-  for door, door_loc in doors.items():
-    G.remove_node(door_loc)
+  dependencies = defaultdict(list)
 
+  sources = list(keys.items())
+  sources.insert(0, ("-", current_location))
+  for src_key, source in sources:
+    paths = nx.shortest_path(G, source, weight="weight")
+    for tar_key, target in keys.items():
+      if tar_key != src_key:
+        path = paths[target]
+        
+        depends_on = set()
+        for door, door_loc in doors.items():
+          if (door.lower() != src_key) and (door_loc in path):
+            depends_on.add(door.lower())
+
+        for key, key_loc in keys.items():
+          if (key != src_key) and (key != tar_key) and (key_loc in path):
+            depends_on.add(key)
+
+        dependencies[source].append((tar_key, target, depends_on, len(path)-1))
+
+  cache = {}
   best_path_length = 999999
-  def walk(current_location: Location, collected_keys: Set[str], distance_walked: int, route: str):
+  def walk(current_location: Location, collected_keys: Set[str], distance_walked: int):
     nonlocal best_path_length
     
     if distance_walked >= best_path_length:
-      return distance_walked
+      return 999999
 
     # Have we collected all the keys?
     if len(collected_keys) == len(keys):
       best_path_length = min(best_path_length, distance_walked)
       return distance_walked
 
-    shortest_path = 99999999
-    for key,key_loc in keys.items():
-      if key not in collected_keys and key_loc in G.nodes() and nx.has_path(G, current_location, key_loc):
-        
-        # Walk to key
-        path = nx.shortest_path(G, current_location, key_loc, weight="weight")[:-1]
-        
-        # Check we aren't walking past another key
-        if is_key_enroute(collected_keys, path):
-          continue
+    cache_key = current_location, tuple(sorted(collected_keys))
+    if cache_key in cache:
+      return cache[cache_key] + distance_walked
 
-        distance = nx.shortest_path_length(G, current_location, key_loc, weight="weight")
+    # Where can we get to?
+    targets = dependencies[current_location]
+    shortest = 999999
+    for (tar_key, tar_loc, depends_on, distance) in targets:
+      if tar_key not in collected_keys:
+        if depends_on.issubset(collected_keys):
+          collected_keys.add(tar_key)
+          shortest = min(shortest, walk(tar_loc, collected_keys, distance_walked+distance))
+          collected_keys.remove(tar_key)
 
-        # Collect key
-        collected_keys.add(key)
+    # Cache the shortest distance from here to the end
+    cache[cache_key] = shortest - distance_walked
+    return shortest
 
-        # Unlock door
-        door_loc = None
-        if key.upper() in doors:
-          door_loc = doors[key.upper()]
-          links = door_edges[key.upper()]
-          for link_loc, type, weight in links:
-            if (not type.isupper()) or type.lower() in collected_keys:
-              G.add_edge(door_loc,link_loc,weight=weight)
-        shortest_path = min(shortest_path, walk(key_loc, collected_keys, distance_walked+distance, route+f"{key} ({distance})  "))
-          
-        # Relock door
-        if door_loc:
-          G.remove_node(door_loc)
-      
-        # Return key
-        collected_keys.remove(key)
-    return shortest_path
+  return walk(current_location, set(), 0)
 
-  def is_key_enroute(collected_keys, path):
-    for another_key,another_key_loc in keys.items():
-      if (another_key not in collected_keys) and (another_key_loc in path):
-        return True
-    return False
-
-  return walk(current_location, set(), 0, "")
-
-# print(solve(r"C:\Personal\AdventOfCode2019\Day18\data.txt"))
 assert solve(r"C:\Personal\AdventOfCode2019\Day18\sample1.txt") == 8
 assert solve(r"C:\Personal\AdventOfCode2019\Day18\sample2.txt") == 86
 assert solve(r"C:\Personal\AdventOfCode2019\Day18\sample3.txt") == 132
-assert solve(r"C:\Personal\AdventOfCode2019\Day18\sample4.txt") == 136
 assert solve(r"C:\Personal\AdventOfCode2019\Day18\sample5.txt") == 81
+assert solve(r"C:\Personal\AdventOfCode2019\Day18\sample4.txt") == 136
+assert solve(r"C:\Personal\AdventOfCode2019\Day18\data.txt") == 5068
