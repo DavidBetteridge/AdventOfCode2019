@@ -1,8 +1,8 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import List, Set
-from copy import deepcopy
 import networkx as nx
+from itertools import permutations
 
 @dataclass(frozen=True, eq=True)
 class Location:
@@ -47,6 +47,7 @@ def solve(filename: str) -> int:
   sources = list(keys.items())
   for loc, current_location in enumerate(current_locations):
     sources.insert(0, (str(loc), current_location))
+    
   for src_key, source in sources:
     paths = nx.shortest_path(G, source, weight="weight")
     for tar_key, target in keys.items():
@@ -65,26 +66,20 @@ def solve(filename: str) -> int:
         dependencies[source].append((tar_key, target, depends_on, len(path)-1))
 
   cache = {}
-  best_path_length = 999999
   def walk(current_locations: List[Location], collected_keys: Set[str], distance_walked: int):
-    nonlocal best_path_length
-    
-    if distance_walked >= best_path_length:
-      return 999999
 
     # Have we collected all the keys?
     if len(collected_keys) == len(keys):
-      best_path_length = min(best_path_length, distance_walked)
       return distance_walked
 
-    cache_key = tuple(current_locations), tuple(sorted(collected_keys))
+    cache_key = tuple(sorted(collected_keys)), tuple(current_locations)
     if cache_key in cache:
       return cache[cache_key] + distance_walked
 
     # Where can we get to?
-    shortest = 999999
+    shortest = 10000
     for i, current_location in enumerate(current_locations):
-      new_locations = deepcopy(current_locations)
+      new_locations = current_locations.copy()
       targets = dependencies[current_location]
       for (tar_key, tar_loc, depends_on, distance) in targets:
         if tar_key not in collected_keys:
@@ -98,11 +93,17 @@ def solve(filename: str) -> int:
     cache[cache_key] = shortest - distance_walked
     return shortest
 
-  return walk(current_locations, set(), 0)
+  return walk(list(current_locations), set(), 0)
+
+assert solve(r"C:\Personal\AdventOfCode2019\Day18\sample1.txt") == 8
+assert solve(r"C:\Personal\AdventOfCode2019\Day18\sample2.txt") == 86
+assert solve(r"C:\Personal\AdventOfCode2019\Day18\sample3.txt") == 132
+assert solve(r"C:\Personal\AdventOfCode2019\Day18\sample5.txt") == 81
+assert solve(r"C:\Personal\AdventOfCode2019\Day18\sample4.txt") == 136
+assert solve(r"C:\Personal\AdventOfCode2019\Day18\data.txt") == 5068
 
 assert solve(r"C:\Personal\AdventOfCode2019\Day18\sample1_part2.txt") == 8
 assert solve(r"C:\Personal\AdventOfCode2019\Day18\sample2_part2.txt") == 24
 assert solve(r"C:\Personal\AdventOfCode2019\Day18\sample3_part2.txt") == 32
 assert solve(r"C:\Personal\AdventOfCode2019\Day18\sample4_part2.txt") == 72
-assert solve(r"C:\Personal\AdventOfCode2019\Day18\data.txt") == 5068
-print(solve(r"C:\Personal\AdventOfCode2019\Day18\data part 2.txt"))  # 2002 too high
+assert solve(r"C:\Personal\AdventOfCode2019\Day18\data part 2.txt") == 1966
