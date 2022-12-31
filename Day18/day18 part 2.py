@@ -1,8 +1,16 @@
+# Tips
+#   Know how to write DFS and BFS from memory
+#   Calculate the total search space.  If for example it's 13! then no amount
+#   of code tuning will help.
+#   For large search space you need to either prune the tree,  or cache previous
+#   results.
+#   Remove any optimasations which only give a small gain as they could interfer
+#   which caching and break logic
+
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import List, Set
 import networkx as nx
-from itertools import permutations
 
 @dataclass(frozen=True, eq=True)
 class Location:
@@ -93,7 +101,7 @@ def solve(filename: str) -> int:
     cache[cache_key] = shortest - distance_walked
     return shortest
 
-  return walk(list(current_locations), set(), 0)
+  return walk(current_locations, set(), 0)
 
 assert solve(r"C:\Personal\AdventOfCode2019\Day18\sample1.txt") == 8
 assert solve(r"C:\Personal\AdventOfCode2019\Day18\sample2.txt") == 86
