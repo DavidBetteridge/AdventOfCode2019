@@ -19,4 +19,7 @@ for _ in range(100):
     pattern = pattern_for_row(row+1)
     next_phrase += (str(sum([(int(a) * b) for a,b in zip(input_signal, cycle(pattern))]))[-1])
   input_signal = next_phrase
-print(next_phrase[:8])
+
+part_1 = next_phrase[:8]
+print(part_1)
+assert part_1 == 63794407
