@@ -22,7 +22,7 @@ class Nic:
 		self.__queue = deque()
 		self.__queue.append(self.__address)
 		self.__com = Computer(memory.copy())
-		self.__ip = 0
+		self.ip = 0
 
 
 	def receive(self,x,y):
@@ -50,11 +50,12 @@ class Nic:
 				x = command_buffer.popleft()
 				y = command_buffer.popleft()
 				if dst == 255:
+					# First time this is called,  y gives us the value for part 1
 					nat.receive(x,y)
 				else:
 					computers[dst].receive(x,y)
 
-		self.__ip = self.__com.run_program(read_from_keyboard, output_to_screen, self.__ip)
+		self.ip = self.__com.run_program(read_from_keyboard, output_to_screen, self.ip)
 		return idle
 
 nat = Nat()
@@ -65,9 +66,8 @@ for address in range(50):
 sent = set()
 while True:
 	if all(computer.run(computers, nat) for computer in computers):
-		# All are idle
 		if nat.buffer[1] in sent:
-			print(nat.buffer[1])
+			print("part2", nat.buffer[1])
 			quit()
 		else:
 			sent.add(nat.buffer[1])
