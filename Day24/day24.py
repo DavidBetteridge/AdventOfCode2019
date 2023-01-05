@@ -21,16 +21,11 @@ def mutate(rows: List[str]) -> List[str]:
       elif cell == "." and bug_count in [1,2]:
         # infested
         temp[row_number][column_number]="#"
-      else:
-        #no change
-        temp[row_number][column_number]=cell
-
   return temp
 
 def print_rows(rows: List[str]):
-  for i, row in enumerate(rows):
+  for row in rows:
     print(row)
-
 
 def biodiversity_rating(rows: List[str]):
   p = 0
