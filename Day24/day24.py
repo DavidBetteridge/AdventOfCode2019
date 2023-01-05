@@ -1,49 +1,83 @@
-from typing import List
+from typing import Set
 from copy import deepcopy
 
 with open("Day24/data.txt") as f:
   rows = [list(r) for r in f.read().splitlines()]
-
-def mutate(rows: List[str]) -> List[str]:
-  temp = deepcopy(rows)
-  for row_number, row in enumerate(rows):
-    for column_number, cell in enumerate(row):
-      bug_count = 0
-      for x_off, y_off in [(-1,0),(1,0),(0,-1),(0,1)]:
-        x = column_number+x_off
-        y = row_number+y_off
-        if (0 <= x < len(row)) and (0 <= y < len(rows)) and (rows[y][x] == "#"):
-          bug_count+=1
-      
-      if cell == '#' and bug_count != 1:
-        # bug dies
-        temp[row_number][column_number]="."
-      elif cell == "." and bug_count in [1,2]:
-        # infested
-        temp[row_number][column_number]="#"
-  return temp
-
-def print_rows(rows: List[str]):
-  for row in rows:
-    print(row)
-
-def biodiversity_rating(rows: List[str]):
-  p = 0
-  rating = 0
+  bugs = set()
+  i=0
   for row in rows:
     for cell in row:
+      i+=1
       if cell == "#":
-        rating += (2 ** p)
-      p+=1
+        bugs.add((i, 0))
+
+links = {
+  1: [(2,0),(6,0)],
+  2: [(1,0),(3,0), (7,0)],
+  3: [(2,0),(4,0), (8,0)],
+  4: [(3,0),(5,0), (9,0)],
+  5: [(4,0), (10,0)],
+  6: [(1,0), (7,0), (11,0)],
+  7: [(2,0), (6,0), (8,0), (12,0)],
+  8: [(3,0), (7,0), (9,0), (13,0)],
+  9: [(4,0), (8,0), (10,0), (14,0)],
+  10: [(5,0), (9,0), (15,0)],
+  11: [(6,0), (12,0), (16,0)],
+  12: [(7,0), (11,0), (13,0), (17,0)],
+  13: [(8,0), (12,0), (14,0), (18,0)],
+  14: [(9,0), (13,0), (15,0), (19,0)],
+  15: [(10,0), (14,0), (20,0)],
+  16: [(11,0), (17,0), (21,0)],
+  17: [(12,0), (16,0), (18,0), (22,0)],
+  18: [(13,0), (17,0), (19,0), (23,0)],
+  19: [(14,0), (18,0), (20,0), (24,0)],
+  20: [(15,0), (19,0), (25,0)],
+  21: [(16,0), (22,0)],
+  22: [(17,0), (21,0), (23,0)],
+  23: [(18,0), (22,0), (24,0)],
+  24: [(19,0), (23,0), (25,0)],
+  25: [(20,0), (24,0)]
+}
+
+def mutate(depth: int, bugs: Set[str]) -> Set[str]:
+  temp = deepcopy(bugs)
+
+  for bug_number in range(1, 26):
+    bug_count = 0
+    for link in links[bug_number]:
+      if link in bugs:
+        bug_count+=1
+    if ((bug_number,depth) in bugs) and bug_count != 1:
+      # bug dies
+      temp.remove((bug_number,depth))
+    elif ((bug_number,depth) not in bugs) and bug_count in [1,2]:
+      # infested
+      temp.add((bug_number,depth))
+  return temp
+
+def print_rows(bugs: Set[str]):
+  for bug_number in range(1, 26):
+    if bug_number % 5 == 1:
+      print()
+    if (bug_number,0) in bugs:
+      print("#",end="")
+    else:
+      print(".",end="")
+  print("")
+
+def biodiversity_rating(bugs: Set[str]):
+  rating = 0
+  for bug_number in range(1, 26):
+    if (bug_number,0) in bugs:
+      rating += (2 ** (bug_number-1))
   return rating
 
 seen = set()
-rating = biodiversity_rating(rows)
 while True:
-  rows = mutate(rows)
-  rating = biodiversity_rating(rows)
+  bugs = mutate(0, bugs)
+  rating = biodiversity_rating(bugs)
   if rating in seen:
-    print_rows(rows)
+    print_rows(bugs)
     print(rating)
     break
   else:
