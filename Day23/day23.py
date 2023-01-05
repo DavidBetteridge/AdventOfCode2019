@@ -9,6 +9,12 @@ memory = {}
 for i in range(len(s)):
     memory[i] = int(s[i])
 
+class Nat:
+	def __init__(self):
+		self.buffer = [None, None]
+	def receive(self,x,y):
+		self.buffer = [x,y]
+
 class Nic:
 
 	def __init__(self, address):
@@ -19,33 +25,50 @@ class Nic:
 		self.__ip = 0
 
 
-	def send(self,x,y):
-		print(self.__address,x,y)
+	def receive(self,x,y):
 		self.__queue.append(x)
 		self.__queue.append(y)
 
-	def run(self, computers: List["Nic"]):
+	def run(self, computers: List["Nic"], nat: Nat):
+		idle = True
+
 		def read_from_keyboard():
+			nonlocal idle
 			if len(self.__queue)>0:
+					idle=False
 					return self.__queue.popleft()
 			else:
 					return -1
 
 		command_buffer = deque()	
 		def output_to_screen(valueToPrint):
+			nonlocal idle
+			idle = False
 			command_buffer.append(valueToPrint)
 			if len(command_buffer) == 3:
 				dst = command_buffer.popleft()
 				x = command_buffer.popleft()
 				y = command_buffer.popleft()
-				computers[dst].send(x,y)
+				if dst == 255:
+					nat.receive(x,y)
+				else:
+					computers[dst].receive(x,y)
 
 		self.__ip = self.__com.run_program(read_from_keyboard, output_to_screen, self.__ip)
+		return idle
 
+nat = Nat()
 computers: List[Nic] = []
 for address in range(50):
 	computers.append(Nic(address))
 
+sent = set()
 while True:
-	for computer in computers:
-		computer.run(computers)
+	if all(computer.run(computers, nat) for computer in computers):
+		# All are idle
+		if nat.buffer[1] in sent:
+			print(nat.buffer[1])
+			quit()
+		else:
+			sent.add(nat.buffer[1])
+		computers[0].receive(*nat.buffer)
